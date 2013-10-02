@@ -23,6 +23,15 @@
 ;;; Commentary:
 
 ;; M-x scratch - handy scratch buffer at your finger tip.
+;;
+;; - C-c C-j     => Change major mode or buffer (with C-u)
+;; - C-c C-k     => Kill buffer (no confirmation if with C-u)
+;; - C-c C-o     => Erase buffer
+;;
+;; NOTE: variable `scratch-major-mode-history' keeps a history of
+;; major modes used in scratch buffers, which are placed at the front
+;; when calling `scratch-change-buffer-or-mode'. It might be helpful
+;; to have (savehist-mode 1) to preserve it across emacs sessions.
 
 ;;; Code:
 
@@ -31,8 +40,8 @@
   :group 'editing
   :group 'help)
 
-(defcustom scratch-base-buffer-name "*Scratch*"
-  "The base scratch buffer name."
+(defcustom scratch-buffer-name "*Scratch*"
+  "The scratch buffer name."
   :type 'string
   :group 'scratch)
 
@@ -60,7 +69,11 @@
   (interactive "*")
   (erase-buffer))
 
-(defvar scratch-read-major-mode-history nil)
+(defvar scratch-major-mode-history nil
+  "History list for major modes in scratch buffers.
+
+Maximum length of the history list is determined by the value of
+`history-length', which see.")
 
 (defun scratch-read-major-mode ()
   "Choose a major mode with completion."
@@ -73,16 +86,16 @@
                          ;; Some minor modes don't use `define-minor-mode'.
                          (not (string-match-p "-minor-mode\\'" (symbol-name m)))
                          (not (memq m minor-mode-list))
-                         (not (member (symbol-name m) scratch-read-major-mode-history)))
+                         (not (member (symbol-name m) scratch-major-mode-history)))
                 (push (symbol-name m)
                       ;; Modes by define-derived-mode
                       (if (plist-member (symbol-plist m) 'derived-mode-parent)
                           mm
                         mmx)))))
-           (append scratch-read-major-mode-history mm mmx))))
+           (append scratch-major-mode-history mm mmx))))
     (intern-soft (let ((history-delete-duplicates t))
                    (ido-completing-read "Major mode: " modes nil nil nil
-                                        'scratch-read-major-mode-history)))))
+                                        'scratch-major-mode-history)))))
 
 (defun scratch-buffer-names (&optional exclude-new)
   ;; Prune dead buffers.
@@ -92,11 +105,14 @@
   (let ((bufs (mapcar #'buffer-name scratch-stack)))
     (if exclude-new
         bufs
-      (cons (propertize (generate-new-buffer-name scratch-base-buffer-name)
+      (cons (propertize (generate-new-buffer-name scratch-buffer-name)
                         'face 'error)
             bufs))))
 
 (defun scratch-change-buffer-or-mode (&optional what)
+  "Change buffer or major mode according to WHAT.
+When called interactively with prefix change buffer, otherwise
+change major mode."
   (interactive
    (list (if current-prefix-arg
              (ido-completing-read "Buffer: " (scratch-buffer-names) nil t)
@@ -110,7 +126,7 @@
       (and new (scratch-change-buffer-or-mode))))
    (t (with-demoted-errors
         (funcall (or what
-                     (intern-soft (car scratch-read-major-mode-history))
+                     (intern-soft (car scratch-major-mode-history))
                      'text-mode)))))
   (scratch-mode 1))
 
@@ -130,17 +146,16 @@
 
 ;;;###autoload
 (defun scratch ()
-  "Switch to *scratch* buffer."
+  "Switch to *Scratch* buffer."
   (interactive)
   (scratch-change-buffer-or-mode
-   (or (car (scratch-buffer-names t)) scratch-base-buffer-name)))
+   (or (car (scratch-buffer-names t)) scratch-buffer-name)))
 
 (defun scratch-change-major-mode-hook ()
   (when scratch-mode
     (scratch-mode 1)
     (let ((history-delete-duplicates t))
-      (add-to-history 'scratch-read-major-mode-history
-                      (symbol-name major-mode)))))
+      (add-to-history 'scratch-major-mode-history (symbol-name major-mode)))))
 
 ;; Change major mode in any other way should just work.
 (add-hook 'after-change-major-mode-hook 'scratch-change-major-mode-hook)
