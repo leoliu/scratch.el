@@ -134,6 +134,8 @@ change major mode."
   (setq scratch-stack (delq (current-buffer) scratch-stack)))
 
 (put 'scratch-mode 'permanent-local t)
+
+;;;###autoload
 (define-minor-mode scratch-mode nil :lighter " draft"
   (if scratch-mode
       (progn
