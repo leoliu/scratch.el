@@ -78,7 +78,8 @@ Maximum length of the history list is determined by the value of
 (defun scratch-read-major-mode ()
   "Choose a major mode with completion."
   (let ((modes
-         (let (mm mmx)
+         (let ((pred (lambda (m1 m2) (< (length m1) (length m2))))
+               mm mmx)
            (mapatoms
             (lambda (m)
               (when (and (commandp m)
@@ -92,7 +93,8 @@ Maximum length of the history list is determined by the value of
                       (if (plist-member (symbol-plist m) 'derived-mode-parent)
                           mm
                         mmx)))))
-           (append scratch-major-mode-history mm mmx))))
+           (append scratch-major-mode-history
+                   (sort mm pred) (sort mmx pred)))))
     (intern-soft (let ((history-delete-duplicates t))
                    (ido-completing-read "Major mode: " modes nil nil nil
                                         'scratch-major-mode-history)))))
