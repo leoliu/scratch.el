@@ -61,7 +61,9 @@
   (interactive "P")
   (when (or no-confirm
             (not (buffer-modified-p))
-            (kill-buffer-ask (current-buffer)))
+            ;; Same as `kill-buffer-ask'.
+            (yes-or-no-p (format "Buffer %s HAS BEEN EDITED.  Kill? "
+                                 (buffer-name (current-buffer)))))
     (quit-window t)))
 
 ;; Since command `erase-buffer' is disabled by default.
