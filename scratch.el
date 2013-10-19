@@ -99,7 +99,8 @@ Maximum length of the history list is determined by the value of
                    (sort mm pred) (sort mmx pred)))))
     (intern-soft (let ((history-delete-duplicates t))
                    (ido-completing-read "Major mode: " modes nil nil nil
-                                        'scratch-major-mode-history)))))
+                                        'scratch-major-mode-history
+                                        (cadr modes))))))
 
 (defun scratch-buffer-names (&optional exclude-new)
   ;; Prune dead buffers.
