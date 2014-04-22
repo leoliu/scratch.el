@@ -1,6 +1,6 @@
-;;; scratch.el --- use scratch buffers easily        -*- lexical-binding: t; -*-
+;;; scratch.el --- scratch buffers                   -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2013  Leo Liu
+;; Copyright (C) 2013-2014  Leo Liu
 
 ;; Author: Leo Liu <sdl.web@gmail.com>
 ;; Version: 1.0
@@ -28,10 +28,10 @@
 ;; - C-c C-k     => Kill buffer (no confirmation if with C-u)
 ;; - C-c C-o     => Erase buffer
 ;;
-;; NOTE: variable `scratch-major-mode-history' keeps a history of
+;; Note: variable `scratch-major-mode-history' keeps a history of
 ;; major modes used in scratch buffers, which are placed at the front
 ;; when calling `scratch-change-buffer-or-mode'. It might be helpful
-;; to have (savehist-mode 1) to preserve it across emacs sessions.
+;; to have (savehist-mode 1) to persist it across emacs sessions.
 
 ;;; Code:
 
