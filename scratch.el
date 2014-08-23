@@ -79,28 +79,32 @@ Maximum length of the history list is determined by the value of
 
 (defun scratch-read-major-mode ()
   "Choose a major mode with completion."
-  (let ((modes
-         (let ((pred (lambda (m1 m2) (< (length m1) (length m2))))
-               mm mmx)
-           (mapatoms
-            (lambda (m)
-              (when (and (commandp m)
-                         (string-match-p "-mode\\'" (symbol-name m))
-                         ;; Some minor modes don't use `define-minor-mode'.
-                         (not (string-match-p "-minor-mode\\'" (symbol-name m)))
-                         (not (memq m minor-mode-list))
-                         (not (member (symbol-name m) scratch-major-mode-history)))
-                (push (symbol-name m)
-                      ;; Modes by define-derived-mode
-                      (if (plist-member (symbol-plist m) 'derived-mode-parent)
-                          mm
-                        mmx)))))
-           (append scratch-major-mode-history
-                   (sort mm pred) (sort mmx pred)))))
-    (intern-soft (let ((history-delete-duplicates t))
-                   (ido-completing-read "Major mode: " modes nil nil nil
-                                        'scratch-major-mode-history
-                                        (cadr modes))))))
+  (let* ((modes
+          (let ((pred (lambda (m1 m2) (< (length m1) (length m2))))
+                mm mmx)
+            (mapatoms
+             (lambda (m)
+               (when (and (commandp m)
+                          (string-match-p "-mode\\'" (symbol-name m))
+                          ;; Some minor modes don't use `define-minor-mode'.
+                          (not (string-match-p "-minor-mode\\'" (symbol-name m)))
+                          (not (memq m minor-mode-list))
+                          (not (member (symbol-name m) scratch-major-mode-history)))
+                 (push (symbol-name m)
+                       ;; Modes by define-derived-mode
+                       (if (plist-member (symbol-plist m) 'derived-mode-parent)
+                           mm
+                         mmx)))))
+            (append scratch-major-mode-history
+                    (sort mm pred) (sort mmx pred))))
+         (name (let ((history-delete-duplicates t))
+                 (ido-completing-read "Major mode: " modes nil nil nil
+                                      'scratch-major-mode-history
+                                      (cadr modes)))))
+    (if (fboundp (intern-soft name))
+        (intern-soft name)
+      (ignore (setq scratch-major-mode-history
+                    (delete name scratch-major-mode-history))))))
 
 (defun scratch-buffer-names (&optional exclude-new)
   ;; Prune dead buffers.
